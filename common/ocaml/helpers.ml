@@ -1,4 +1,20 @@
+exception Error of string;;
 exception Empty_list of string;;
+
+(* ===== ARITHMETICS ===== *)
+let add a b = a + b;;
+let mul a b = a * b;;
+let sub a b = a - b;;
+let div a b = a / b;;
+
+(* ===== ARRAY OPERATIONS ===== *)
+(* find index of first element in array that matches pred *)
+let arr_findi_opt pred arr =
+	let len = Array.length arr in
+		let rec iter n = 
+			if n = len then -1 else if pred arr.(n) then n else iter (n + 1)
+		in iter 0;;
+	
 
 (* ===== LIST OPERATIONS ===== *)
 let list_empty lst = 
@@ -38,9 +54,24 @@ let list_sum lst =
         | [] -> raise (Empty_list "list_sum expects a non-empty list")
         | h :: t -> List.fold_left (fun x y -> x + y) h t;;
 
+let rec find_first pred lst =
+    match lst with
+        | [] -> None
+        | h :: t -> if pred h then Some h else find_first pred t;;
+
+(* split a list into sublists of size n *)
+let list_split_n n lst =
+	let rec iter curr i result rest =
+		match rest with
+			| [] -> result @ (filter_empty [curr])
+			| h :: t -> if i = n then iter [h] 1 (result @ [curr]) t
+						else iter (curr @ [h]) (i+1) result t
+	in iter [] 0 [] lst;;
 
 let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
+
+let string_to_list s = String.fold_left (fun res c -> res @ [c]) [] s;;
 
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =
@@ -53,3 +84,7 @@ let read_lines chan =
 
 let file_to_lines filename =
     In_channel.with_open_text filename read_lines;;
+
+(* ===== MISCELLANEOUS ===== *)
+let inside x min max = x > min && x < max;;
+let around x min max = x >= min && x <= max;;
