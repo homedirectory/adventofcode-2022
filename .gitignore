@@ -1,0 +1,6 @@
+*.sw[pao]
+# OCaml files
+*.o
+*.cm[ix]
+# racket files
+**/compiled/
