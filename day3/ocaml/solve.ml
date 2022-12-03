@@ -5,17 +5,17 @@ let alphabet_full = ['A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O'
 
 let priority c = 
     let code = Char.code c in
-    if around code 65 90 then code - 38 else code - 96;;
+        if isupper c then code - 38 else code - 96;;
 
 (* index in alphabet: [A,...,Z,a,...,z] *)
 let char_to_index c = 
     let code = Char.code c in
-    if around code 65 90 then code - 65 else code - 71;;
+        if isupper c then code - 65 else code - 71;;
 
 let alphabet_of_str s =
     let alph = Array.make 52 c0 in
-    List.iter (fun c -> alph.(char_to_index c) <- c) @@ string_to_list s;
-    Array.to_list alph;;
+        List.iter (fun c -> alph.(char_to_index c) <- c) @@ string_to_list s;
+        Array.to_list alph;;
 
 let alphabet_match a1 a2 =
     List.map2 (fun c1 c2 -> if c1 = c2 then c1 else c0) a1 a2;;
@@ -36,9 +36,8 @@ let common_item sack =
 
 (* === SOLVE === *)
 let rucksacks = file_to_lines "input";;
-let ans1 = list_sum @@ List.map priority @@ List.map common_item rucksacks;;
-Printf.printf "Part 1 answer: %d\n" ans1;;
+Printf.printf "Part 1 answer: %d\n" @@
+list_sum @@ List.map priority @@ List.map common_item rucksacks;;
 
-let groups = list_split_n 3 rucksacks;;
-let ans2 = list_sum @@ List.map priority @@ List.map find_common_char groups;;
-Printf.printf "Part 2 answer: %d\n" ans2;;
+Printf.printf "Part 2 answer: %d\n" @@
+list_sum @@ List.map priority @@ List.map find_common_char @@ list_split_n 3 rucksacks;;

@@ -7,6 +7,13 @@ let mul a b = a * b;;
 let sub a b = a - b;;
 let div a b = a / b;;
 
+(* ===== MISCELLANEOUS ===== *)
+let inside x min max = x > min && x < max;;
+let around x min max = x >= min && x <= max;;
+
+(* ===== CHAR OPERATIONS ===== *)
+let isupper c = around (Char.code c) 65 90;;
+
 (* ===== ARRAY OPERATIONS ===== *)
 (* find index of first element in array that matches pred *)
 let arr_findi_opt pred arr =
@@ -84,7 +91,3 @@ let read_lines chan =
 
 let file_to_lines filename =
     In_channel.with_open_text filename read_lines;;
-
-(* ===== MISCELLANEOUS ===== *)
-let inside x min max = x > min && x < max;;
-let around x min max = x >= min && x <= max;;
