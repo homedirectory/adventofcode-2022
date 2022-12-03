@@ -41,3 +41,9 @@ list_sum @@ List.map priority @@ List.map common_item rucksacks;;
 
 Printf.printf "Part 2 answer: %d\n" @@
 list_sum @@ List.map priority @@ List.map find_common_char @@ list_split_n 3 rucksacks;;
+
+(* a cool way to make chunks of 3 but may result into Match_failure for unexpected input *)
+let rec chunks_of_3 lst = 
+    match lst with
+        | [] -> []
+        | a :: b :: c :: rest -> [[a;b;c]] @ (chunks_of_3 rest);;
