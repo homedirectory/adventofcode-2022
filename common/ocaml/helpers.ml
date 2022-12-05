@@ -1,5 +1,6 @@
 exception Error of string;;
 exception Empty_list of string;;
+exception Out_of_bounds;;
 
 (* ===== ARITHMETICS ===== *)
 let add a b = a + b;;
@@ -13,6 +14,14 @@ let around x min max = x >= min && x <= max;;
 
 (* ===== CHAR OPERATIONS ===== *)
 let isupper c = around (Char.code c) 65 90;;
+let is_ascii c = 
+    let code = (Char.code c) in
+    (around code 65 90) || (around code 97 122);;
+
+(* ===== STRING OPERATIONS ===== *)
+let str_from (n:int) s = String.sub s n (String.length s - n);;
+let string_to_list s = String.fold_left (fun res c -> res @ [c]) [] s;;
+let str_explode s = string_to_list s;;
 
 (* ===== ARRAY OPERATIONS ===== *)
 (* find index of first element in array that matches pred *)
@@ -51,6 +60,11 @@ let rec take n lst =
     | [] -> []
     | h :: t -> if n = 0 then [] else h :: take (n - 1) t;;
 
+let rec drop n lst =
+    match lst with
+    | [] -> if n = 0 then [] else raise Out_of_bounds
+    | h :: t -> if n = 0 then lst else drop (n-1) t;;
+
 let list_max lst =
     match lst with
         | [] -> raise (Empty_list "list_max expects a non-empty list")
@@ -78,7 +92,22 @@ let list_split_n n lst =
 let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
 
-let string_to_list s = String.fold_left (fun res c -> res @ [c]) [] s;;
+let list_every_nth n lst =
+    List.filteri (fun i x -> i mod n == 0) lst;;
+
+let split_after n lst =
+    let rec iter i left right =
+        if i > n then (left, right)
+        else match right with
+        | [] -> raise Out_of_bounds
+        | h :: t -> iter (i+1) (left @ [h]) t
+    in iter 0 [] lst;;
+
+let split_before n lst =
+    split_after (n-1) lst;;
+
+let transpose lst = 
+    List.of_seq @@ Seq.map List.of_seq @@ Seq.transpose @@ List.to_seq @@ List.map List.to_seq lst;;
 
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =

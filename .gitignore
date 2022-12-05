@@ -4,3 +4,5 @@
 *.cm[ix]
 # racket files
 **/compiled/
+
+*.vim
