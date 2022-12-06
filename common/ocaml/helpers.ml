@@ -20,8 +20,17 @@ let is_ascii c =
 
 (* ===== STRING OPERATIONS ===== *)
 let str_from (n:int) s = String.sub s n (String.length s - n);;
-let string_to_list s = String.fold_left (fun res c -> res @ [c]) [] s;;
+let string_to_list s = String.fold_right List.cons s [];;
 let str_explode s = string_to_list s;;
+
+let string_findi f s =
+    let len = String.length s in
+    let i, stop = ref 0, ref false in
+    while not !stop && !i < len do
+        if f !i then stop := true else i := !i + 1
+    done;
+    if not !stop then None else Some !i;;
+
 
 (* ===== ARRAY OPERATIONS ===== *)
 (* find index of first element in array that matches pred *)
@@ -109,6 +118,17 @@ let split_before n lst =
 let transpose lst = 
     List.of_seq @@ Seq.map List.of_seq @@ Seq.transpose @@ List.to_seq @@ List.map List.to_seq lst;;
 
+let sq_range left right =
+    Seq.take (right - left) @@ Seq.ints left;;
+
+let sq_indexize sq =
+    Seq.mapi (fun i x -> (i, x)) sq;;
+
+let sq_findi f sq =
+    match Seq.find (fun (i, x) -> f x) (sq_indexize sq) with
+    | None -> None
+    | p -> p;;
+
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =
     let rec iter lst =
@@ -120,3 +140,6 @@ let read_lines chan =
 
 let file_to_lines filename =
     In_channel.with_open_text filename read_lines;;
+
+let file_to_text filename =
+    In_channel.with_open_text filename In_channel.input_all;;
