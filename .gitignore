@@ -2,7 +2,10 @@
 # OCaml files
 *.o
 *.cm[ix]
+*.native
 # racket files
 **/compiled/
 
 *.vim
+
+**/_build
