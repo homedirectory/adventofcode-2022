@@ -1,5 +1,6 @@
 *.sw[pao]
 # OCaml files
+*.out
 *.o
 *.cm[ix]
 *.native
@@ -9,3 +10,5 @@
 *.vim
 
 **/_build
+
+*.html

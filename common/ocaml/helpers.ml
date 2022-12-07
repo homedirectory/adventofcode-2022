@@ -47,6 +47,11 @@ let list_empty lst =
         | [] -> true
         | _ -> false;;
 
+let list_min lst =
+    match lst with
+    | [] -> raise (Error "list_min received empty list")
+    | h::t -> List.fold_left Int.min h t;;
+
 let filter pred lst =
     List.fold_left (fun init el -> if pred el then init @ [el] else init) [] lst;;
 
@@ -128,6 +133,15 @@ let sq_findi f sq =
     match Seq.find (fun (i, x) -> f x) (sq_indexize sq) with
     | None -> None
     | p -> p;;
+
+let list_drop_right n lst =
+    let stop_at = List.length lst - n in
+    let rec iter i tail =
+        if i = stop_at then []
+        else match tail with 
+        | h::t -> h :: iter (i+1) t
+        | [] -> raise Out_of_bounds
+    in iter 0 lst;;
 
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =
