@@ -7,16 +7,24 @@ let add a b = a + b;;
 let mul a b = a * b;;
 let sub a b = a - b;;
 let div a b = a / b;;
+let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e));;
 
 (* ===== MISCELLANEOUS ===== *)
 let inside x min max = x > min && x < max;;
 let around x min max = x >= min && x <= max;;
+
+let int_of_bool b = if b then 1 else 0;;
 
 (* ===== CHAR OPERATIONS ===== *)
 let isupper c = around (Char.code c) 65 90;;
 let is_ascii c = 
     let code = (Char.code c) in
     (around code 65 90) || (around code 97 122);;
+
+let atoi c =
+    let code = Char.code c in
+    if around code 48 57 then code - 48
+    else raise (Error "atoi: invalid char");;
 
 (* ===== STRING OPERATIONS ===== *)
 let str_from (n:int) s = String.sub s n (String.length s - n);;
@@ -142,6 +150,20 @@ let list_drop_right n lst =
         | h::t -> h :: iter (i+1) t
         | [] -> raise Out_of_bounds
     in iter 0 lst;;
+
+(* remove n elements from both sides of lst *)
+let list_strip_n n lst =
+    drop 1 (list_drop_right 1 lst);;
+
+let rec take_while pred lst =
+    match lst with
+    | [] -> []
+    | h :: t -> if pred h then h :: (take_while pred t) else [];;
+
+let rec stop_after pred lst =
+    match lst with
+    | [] -> []
+    | h :: t -> if pred h then [h] else h :: (stop_after pred t);;
 
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =
