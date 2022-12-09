@@ -50,10 +50,26 @@ let arr_findi_opt pred arr =
 	
 
 (* ===== LIST OPERATIONS ===== *)
+let range left right =
+    if left >= right then raise (Error "invalid range")
+    else
+        let rec iter n =
+            if n = right
+            then []
+            else n :: (iter (n+1))
+        in
+        iter left;;
+
 let list_empty lst = 
     match lst with
         | [] -> true
         | _ -> false;;
+
+let rec list_last lst =
+    match lst with
+    | [] -> raise (Error "list_last expects a non-empty list")
+    | h :: [] -> h
+    | h :: t -> list_last t;;
 
 let list_min lst =
     match lst with
@@ -91,6 +107,11 @@ let list_max lst =
     match lst with
         | [] -> raise (Empty_list "list_max expects a non-empty list")
         | h :: t -> List.fold_left max h t;;
+
+let list_min lst = 
+    match lst with
+        | [] -> raise (Empty_list "list_min expects a non-empty list")
+        | h :: t -> List.fold_left min h t;;
 
 let list_sum lst = 
     match lst with
