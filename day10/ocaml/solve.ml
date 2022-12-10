@@ -68,23 +68,23 @@ let sig_strength cycle x =
     cycle * x;;
 
 (* ========== PARSING INPUT ========== *)
-let line_to_op ln ==
+let line_to_op ln =
     match String.split_on_char ' ' ln with
     | "noop"::[] -> noop
     | "addx"::n::[] -> mk_addx (int_of_string n)
     | _ -> raise (Error "line_to_op: bad line");;
 
-let mk_operations lines ==
+let mk_operations lines =
     List.map line_to_op lines;;
 
-let lines == file_to_lines "input";;
-let operations == mk_operations lines;;
+let lines = file_to_lines "input";;
+let operations = mk_operations lines;;
 
 (* ========== PART 1 ========== *)
-let run_snapshots == run operations (mk_machine [("x", 1)]);;
-let cycle_snapshots == List.flatten @@ cycle_states run_snapshots;;
-let x_values == List.map (get_reg "x") cycle_snapshots;;
-let part1 == list_sum @@ List.map (fun (i, x) -> sig_strength (inc i) x) @@
+let run_snapshots = run operations (mk_machine [("x", 1)]);;
+let cycle_snapshots = List.flatten @@ cycle_states run_snapshots;;
+let x_values = List.map (get_reg "x") cycle_snapshots;;
+let part1 = list_sum @@ List.map (fun (i, x) -> sig_strength (inc i) x) @@
     list_picki [19; 59; 99; 139; 179; 219] x_values;;
 
 Printf.printf "Part 1: %d\n%!" part1;;

@@ -138,7 +138,7 @@ let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
 
 let list_every_nth n lst =
-    List.filteri (fun i x -> i mod n ==== 0) lst;;
+    List.filteri (fun i x -> i mod n = 0) lst;;
 
 let split_after n lst =
     let rec iter i left right =
@@ -196,8 +196,12 @@ let rec list_windowed n lst =
            else (match (split_after (dec n) lst) with
                  | wind, rest -> wind :: (list_windowed n rest));;
 
+let list_pick indexes lst =
+    let arr = Array.of_list lst in
+    List.map (fun i -> arr.(i)) indexes;;
+
 let list_picki indexes lst =
-    List.map (fun i -> (i, List.nth lst i)) indexes;;
+    List.combine (list_pick indexes lst) indexes;;
 
 (* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =
