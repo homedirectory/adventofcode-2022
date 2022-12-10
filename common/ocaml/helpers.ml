@@ -8,6 +8,8 @@ let mul a b = a * b;;
 let sub a b = a - b;;
 let div a b = a / b;;
 let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e));;
+let inc x = x + 1;;
+let dec x = x - 1;;
 
 (* ===== MISCELLANEOUS ===== *)
 let inside x min max = x > min && x < max;;
@@ -185,6 +187,32 @@ let rec stop_after pred lst =
     match lst with
     | [] -> []
     | h :: t -> if pred h then [h] else h :: (stop_after pred t);;
+
+(* pick elements with indexes from lst, along with their indexes 
+   return a list of tuples (ind, val) *)
+(*
+let list_picki indexes lst =
+    let rec iter prev_ind inds tail =
+        match tail with
+        | [] -> []
+        | h :: t -> match inds with
+            | [] -> []
+            | hi :: ht -> 
+
+    in
+    let sorted_inds = List.sort Int.compare indexes in
+    match sorted_inds with
+    | [] -> []
+    | h :: t -> iter h t lst;;
+*)
+
+let rec list_windowed n lst =
+    match lst with
+    | [] -> []
+    | _ -> if n >= (List.length lst)
+           then [lst]
+           else (match (split_after (dec n) lst) with
+                 | wind, rest -> wind :: (list_windowed n rest));;
 
 (* ===== FILE (IO) OPERATIONS ===== *)
 let read_lines chan =

@@ -1,4 +1,5 @@
-*.sw[pao]
+*~
+*.sw[paon]
 # OCaml files
 *.out
 *.o
@@ -12,3 +13,6 @@
 **/_build
 
 *.html
+
+# ?  
+input*
