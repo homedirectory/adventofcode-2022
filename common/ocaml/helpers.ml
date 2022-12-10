@@ -2,7 +2,7 @@ exception Error of string;;
 exception Empty_list of string;;
 exception Out_of_bounds;;
 
-(* ===== ARITHMETICS ===== *)
+(* ========== ARITHMETICS ========== *)
 let add a b = a + b;;
 let mul a b = a * b;;
 let sub a b = a - b;;
@@ -11,13 +11,13 @@ let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e));;
 let inc x = x + 1;;
 let dec x = x - 1;;
 
-(* ===== MISCELLANEOUS ===== *)
+(* ========== MISCELLANEOUS ========== *)
 let inside x min max = x > min && x < max;;
 let around x min max = x >= min && x <= max;;
 
 let int_of_bool b = if b then 1 else 0;;
 
-(* ===== CHAR OPERATIONS ===== *)
+(* ========== CHAR OPERATIONS ========== *)
 let isupper c = around (Char.code c) 65 90;;
 let is_ascii c = 
     let code = (Char.code c) in
@@ -28,7 +28,7 @@ let atoi c =
     if around code 48 57 then code - 48
     else raise (Error "atoi: invalid char");;
 
-(* ===== STRING OPERATIONS ===== *)
+(* ========== STRING OPERATIONS ========== *)
 let str_from (n:int) s = String.sub s n (String.length s - n);;
 let string_to_list s = String.fold_right List.cons s [];;
 let str_explode s = string_to_list s;;
@@ -42,7 +42,7 @@ let string_findi f s =
     if not !stop then None else Some !i;;
 
 
-(* ===== ARRAY OPERATIONS ===== *)
+(* ========== ARRAY OPERATIONS ========== *)
 (* find index of first element in array that matches pred *)
 let arr_findi_opt pred arr =
 	let len = Array.length arr in
@@ -51,7 +51,7 @@ let arr_findi_opt pred arr =
 		in iter 0;;
 	
 
-(* ===== LIST OPERATIONS ===== *)
+(* ========== LIST OPERATIONS ========== *)
 let range left right =
     if left >= right then raise (Error "invalid range")
     else
@@ -138,7 +138,7 @@ let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
 
 let list_every_nth n lst =
-    List.filteri (fun i x -> i mod n == 0) lst;;
+    List.filteri (fun i x -> i mod n ==== 0) lst;;
 
 let split_after n lst =
     let rec iter i left right =
@@ -188,24 +188,6 @@ let rec stop_after pred lst =
     | [] -> []
     | h :: t -> if pred h then [h] else h :: (stop_after pred t);;
 
-(* pick elements with indexes from lst, along with their indexes 
-   return a list of tuples (ind, val) *)
-(*
-let list_picki indexes lst =
-    let rec iter prev_ind inds tail =
-        match tail with
-        | [] -> []
-        | h :: t -> match inds with
-            | [] -> []
-            | hi :: ht -> 
-
-    in
-    let sorted_inds = List.sort Int.compare indexes in
-    match sorted_inds with
-    | [] -> []
-    | h :: t -> iter h t lst;;
-*)
-
 let rec list_windowed n lst =
     match lst with
     | [] -> []
@@ -214,7 +196,10 @@ let rec list_windowed n lst =
            else (match (split_after (dec n) lst) with
                  | wind, rest -> wind :: (list_windowed n rest));;
 
-(* ===== FILE (IO) OPERATIONS ===== *)
+let list_picki indexes lst =
+    List.map (fun i -> (i, List.nth lst i)) indexes;;
+
+(* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =
     let rec iter lst =
         match (In_channel.input_line chan) with

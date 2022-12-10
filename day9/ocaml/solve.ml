@@ -1,4 +1,5 @@
-#use "helpers.ml";;
+(*#use "helpers.ml";;*)
+open Helpers;;
 
 type step =
     | Left of int
@@ -125,7 +126,8 @@ let simulate n step_list =
         in
     iter (List.init n (fun _ -> (0, 0))) (List.flatten @@ List.map divide_step step_list);;
 
-let lines = file_to_lines "input";;
+(*let lines = file_to_lines "input";;*)
+let lines = file_to_lines Sys.argv.(1);;
 let steps = List.map 
     (fun ln -> match (String.split_on_char ' ' ln) with
         | "L"::n::[] -> Left (int_of_string n)
