@@ -14,7 +14,7 @@ let char_to_index c =
 
 let alphabet_of_str s =
     let alph = Array.make 52 c0 in
-        List.iter (fun c -> alph.(char_to_index c) <- c) @@ string_to_list s;
+        List.iter (fun c -> alph.(char_to_index c) <- c) @@ str_explode s;
         Array.to_list alph;;
 
 let alphabet_match a1 a2 =
@@ -37,10 +37,10 @@ let common_item sack =
 (* === SOLVE === *)
 let rucksacks = file_to_lines "input";;
 Printf.printf "Part 1 answer: %d\n" @@
-list_sum @@ List.map priority @@ List.map common_item rucksacks;;
+    list_sum @@ List.map priority @@ List.map common_item rucksacks;;
 
 Printf.printf "Part 2 answer: %d\n" @@
-list_sum @@ List.map priority @@ List.map find_common_char @@ list_split_n 3 rucksacks;;
+list_sum @@ List.map priority @@ List.map find_common_char @@ list_windowed 3 rucksacks;;
 
 (* a cool way to make chunks of 3 but may result into Match_failure for unexpected input *)
 let rec chunks_of_3 lst = 

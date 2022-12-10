@@ -53,86 +53,69 @@ let arr_findi_opt pred arr =
 
 (* ========== LIST OPERATIONS ========== *)
 let range left right =
-    if left >= right then raise (Error "invalid range")
-    else
-        let rec iter n =
-            if n = right
-            then []
-            else n :: (iter (n+1))
-        in
-        iter left;;
+    if left >= right then raise (Error "invalid range");
+    let rec iter n =
+        if n = right
+        then []
+        else n :: (iter (n+1))
+    in
+    iter left;;
 
-let list_empty lst = 
-    match lst with
-        | [] -> true
-        | _ -> false;;
+let list_empty = function
+    | [] -> true
+    | _ -> false;;
 
-let rec list_last lst =
-    match lst with
+let rec list_last = function
     | [] -> raise (Error "list_last expects a non-empty list")
     | h :: [] -> h
     | h :: t -> list_last t;;
 
-let list_min lst =
-    match lst with
+let list_min = function
     | [] -> raise (Error "list_min received empty list")
     | h::t -> List.fold_left Int.min h t;;
 
 let filter pred lst =
     List.fold_left (fun init el -> if pred el then init @ [el] else init) [] lst;;
 
-let filter_not pred lst = filter (fun x -> not (pred x)) lst
+let filter_not pred lst =
+    filter (fun x -> not (pred x)) lst
 
-let filter_empty lst = filter_not (fun x -> x = []) lst
+let filter_empty lst = 
+    filter_not (fun x -> x = []) lst
 
 let list_split lst sep =
-    let rec iter sublst res rest = 
-        match rest with
-            | [] -> res @ (filter_empty [sublst])
-            | h :: t -> if h = sep then iter [] (res @ (filter_empty [sublst])) t
-                        else iter (sublst @ [h]) res t
+    let rec iter = function
+        | sub, res, [] -> res @ (filter_empty [sub])
+        | sub, res, h :: t -> 
+            if h = sep then iter ([], (res @ (filter_empty [sub])), t)
+            else iter ((sub @ [h]), res, t)
     in
-    iter [] [] lst;;
+    iter ([], [], lst);;
 
 (* take first n elements from lst *)
-let rec take n lst =
-    match lst with
+let rec take n = function
     | [] -> []
     | h :: t -> if n = 0 then [] else h :: take (n - 1) t;;
 
-let rec drop n lst =
-    match lst with
+let rec drop n = function
     | [] -> if n = 0 then [] else raise Out_of_bounds
-    | h :: t -> if n = 0 then lst else drop (n-1) t;;
+    | h :: t -> if n = 0 then t else drop (n-1) t;;
 
-let list_max lst =
-    match lst with
-        | [] -> raise (Empty_list "list_max expects a non-empty list")
-        | h :: t -> List.fold_left max h t;;
+let list_max = function
+    | [] -> raise (Empty_list "list_max expects a non-empty list")
+    | h :: t -> List.fold_left max h t;;
 
-let list_min lst = 
-    match lst with
-        | [] -> raise (Empty_list "list_min expects a non-empty list")
-        | h :: t -> List.fold_left min h t;;
+let list_min = function
+    | [] -> raise (Empty_list "list_min expects a non-empty list")
+    | h :: t -> List.fold_left min h t;;
 
-let list_sum lst = 
-    match lst with
-        | [] -> raise (Empty_list "list_sum expects a non-empty list")
-        | h :: t -> List.fold_left (fun x y -> x + y) h t;;
+let list_sum = function
+    | [] -> raise (Empty_list "list_sum expects a non-empty list")
+    | h :: t -> List.fold_left (fun x y -> x + y) h t;;
 
-let rec find_first pred lst =
-    match lst with
-        | [] -> None
-        | h :: t -> if pred h then Some h else find_first pred t;;
-
-(* split a list into sublists of size n *)
-let list_split_n n lst =
-	let rec iter curr i result rest =
-		match rest with
-			| [] -> result @ (filter_empty [curr])
-			| h :: t -> if i = n then iter [h] 1 (result @ [curr]) t
-						else iter (curr @ [h]) (i+1) result t
-	in iter [] 0 [] lst;;
+let rec find_first pred = function
+    | [] -> None
+    | h :: t -> if pred h then Some h else find_first pred t;;
 
 let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
@@ -170,7 +153,7 @@ let list_drop_right n lst =
     let rec iter i tail =
         if i = stop_at then []
         else match tail with 
-        | h::t -> h :: iter (i+1) t
+        | h :: t -> h :: iter (i+1) t
         | [] -> raise Out_of_bounds
     in iter 0 lst;;
 
@@ -178,20 +161,17 @@ let list_drop_right n lst =
 let list_strip_n n lst =
     drop 1 (list_drop_right 1 lst);;
 
-let rec take_while pred lst =
-    match lst with
+let rec take_while pred = function
     | [] -> []
     | h :: t -> if pred h then h :: (take_while pred t) else [];;
 
-let rec stop_after pred lst =
-    match lst with
+let rec stop_after pred = function
     | [] -> []
     | h :: t -> if pred h then [h] else h :: (stop_after pred t);;
 
-let rec list_windowed n lst =
-    match lst with
+let rec list_windowed n = function
     | [] -> []
-    | _ -> if n >= (List.length lst)
+    | lst -> if n >= (List.length lst)
            then [lst]
            else (match (split_after (dec n) lst) with
                  | wind, rest -> wind :: (list_windowed n rest));;
