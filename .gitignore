@@ -1,5 +1,5 @@
 *~
-*.sw[paon]
+*.sw[paonm]
 # OCaml files
 *.out
 *.o

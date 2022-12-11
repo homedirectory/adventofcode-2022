@@ -1,3 +1,7 @@
+exception ParseError of string;;
+let failparse s =
+    raise (ParseError s);;
+
 exception Error of string;;
 exception Empty_list of string;;
 exception Out_of_bounds;;
@@ -10,6 +14,16 @@ let div a b = a / b;;
 let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e));;
 let inc x = x + 1;;
 let dec x = x - 1;;
+
+let lcm a b =
+    let lrg, sml = if a > b then a, b else b, a in
+    let rec iter acc =
+        if acc mod sml = 0 then acc else iter (acc + lrg)
+    in
+    iter lrg;;
+
+let quotient n d =
+    int_of_float (Float.floor (float_of_int n) /. (float_of_int d));;
 
 (* ========== MISCELLANEOUS ========== *)
 let inside x min max = x > min && x < max;;
@@ -40,6 +54,15 @@ let string_findi f s =
         if f !i then stop := true else i := !i + 1
     done;
     if not !stop then None else Some !i;;
+
+let string_empty s =
+    String.length s = 0;;
+
+let re_grp n re str =
+    let z = try Some (Str.search_forward re str 0) with e -> None in
+    match z with 
+    | None -> None
+    | _ -> Some (Str.matched_group n str);;
 
 
 (* ========== ARRAY OPERATIONS ========== *)
@@ -183,6 +206,44 @@ let list_pick indexes lst =
 let list_picki indexes lst =
     List.combine (list_pick indexes lst) indexes;;
 
+(* generates a list of length n, where each value is derived from the previous one *)
+let list_generate f init n =
+    List.rev @@
+    List.fold_left (fun acc _ -> 
+        match acc with 
+        | h :: t -> (f h) :: h :: t)
+    [init]
+    (range 0 n);;
+
+let list_add = function
+    | [] -> []
+    | h :: t -> List.fold_left (fun acc l -> List.map2 (+) acc l) h t;;
+
+let list_rmi n lst =
+    let rec iter i = function
+        | [] -> raise (Error "list_rmi: out of bounds")
+        | h :: t -> if i = n then t else h :: (iter (inc i) t)
+    in
+    match lst with
+    | [] -> raise (Error "list_rmi expects non-empty list")
+    | l -> iter 0 l;;
+
+let list_rmis is lst =
+    let rec iter n = function
+        | [], l -> l
+        | ih::it, [] -> raise (Error "list_rmi: out of bounds")
+        | ih::it, h::t -> if ih = n then (iter (inc n) (it, t))
+            else h :: (iter (inc n) (ih::it, t))
+    in
+    match is, lst with
+    | h::t, [] -> raise (Error "list_rmis expects non-empty list")
+    | is, lst -> iter 0 ((List.sort Int.compare is), lst);;
+
+let list_lcm = function
+    | [] -> raise (Error "list_lcm expects non-empty list")
+    | h :: t -> List.fold_left lcm h t;;
+
+
 (* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =
     let rec iter lst =
@@ -197,3 +258,7 @@ let file_to_lines filename =
 
 let file_to_text filename =
     In_channel.with_open_text filename In_channel.input_all;;
+
+let clean_lines lines =
+    List.map String.trim @@ List.filter (Fun.negate string_empty) lines;;
+
