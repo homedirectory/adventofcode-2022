@@ -47,6 +47,9 @@ let str_from (n:int) s = String.sub s n (String.length s - n);;
 let string_to_list s = String.fold_right List.cons s [];;
 let str_explode s = string_to_list s;;
 
+let str_of_chars chars = List.fold_left (fun acc c -> acc ^ (String.make 1 c)) 
+    "" chars;;
+
 let string_findi f s =
     let len = String.length s in
     let i, stop = ref 0, ref false in
@@ -72,9 +75,33 @@ let arr_findi_opt pred arr =
 		let rec iter n = 
 			if n = len then -1 else if pred arr.(n) then n else iter (n + 1)
 		in iter 0;;
-	
+
+let print_matrix printer mtrx =
+    Array.(iter (fun row -> iter (fun x -> printer x; printf "; ") row; printf "\n%!") mtrx);;
+
+let print_matrixi printer mtrx =
+    Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row; printf "\n%!") mtrx);;
+
+let matrix_map f mtrx =
+    Array.(map (map f) mtrx);;
+
+let matrix_mapi f mtrx =
+    Array.(mapi (fun y row -> mapi (fun x el -> f (x, y) el) row) mtrx);;
+
+let matrix_flatten mtrx =
+    Array.(fold_left append mtrx);;
+
+let matrix_dims mtrx =
+    Array.(length mtrx, length mtrx.(0));;
+
+let matrix_iteri f mtrx =
+    Array.(iteri (fun y row -> iteri (fun x el -> f (x, y) el) row) mtrx);;
 
 (* ========== LIST OPERATIONS ========== *)
+let car = List.hd;;
+let cadr lst = List.nth lst 1;;
+let cdr = List.tl;;
+
 let range left right =
     if left >= right then raise (Error "invalid range");
     let rec iter n =
@@ -87,6 +114,22 @@ let range left right =
 let list_empty = function
     | [] -> true
     | _ -> false;;
+
+let print_list printer lst =
+    let rec iter = function
+        | [] -> printf "]\n"
+        | h :: [] -> printer h; iter []
+        | h :: t -> printer h; printf "; "; iter t
+    in
+    print_char '[';
+    iter lst;;
+
+let list_ind_optf f itm lst =
+    let rec iter i = function
+        | [] -> None
+        | h :: t -> if f h itm then Some i else iter (i+1) t
+    in
+    iter 0 lst;;
 
 let rec list_last = function
     | [] -> raise (Error "list_last expects a non-empty list")
@@ -215,6 +258,23 @@ let list_generate f init n =
     [init]
     (range 0 n);;
 
+(* similar to Seq.unfold but each element is derived just from the previous one *)
+let list_unfold f init =
+    let rec iter prev =
+        match f prev with
+        | None -> []
+        | Some x -> x :: iter x
+    in
+    init :: iter init;;
+
+let list_unfoldi f init =
+    let rec iter i prev =
+        match f i prev with
+        | None -> []
+        | Some x -> x :: iter (i+1) x
+    in
+    init :: iter 0 init;;
+
 let list_add = function
     | [] -> []
     | h :: t -> List.fold_left (fun acc l -> List.map2 (+) acc l) h t;;
@@ -242,7 +302,6 @@ let list_rmis is lst =
 let list_lcm = function
     | [] -> raise (Error "list_lcm expects non-empty list")
     | h :: t -> List.fold_left lcm h t;;
-
 
 (* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =
