@@ -1,6 +1,4 @@
-exception ParseError of string;;
-let failparse s =
-    raise (ParseError s);;
+open Printf;;
 
 exception Error of string;;
 exception Empty_list of string;;
@@ -67,6 +65,8 @@ let re_grp n re str =
     | None -> None
     | _ -> Some (Str.matched_group n str);;
 
+let str_to_int s =
+    Scanf.sscanf s "%d" Fun.id;;
 
 (* ========== ARRAY OPERATIONS ========== *)
 (* find index of first element in array that matches pred *)
@@ -102,6 +102,10 @@ let car = List.hd;;
 let cadr lst = List.nth lst 1;;
 let cdr = List.tl;;
 
+let list_to_pair = function
+    | a1 :: a2 :: [] -> (a1, a2)
+    | _ -> failwith "list_to_pair: expected a list of length 2";;
+
 let range left right =
     if left >= right then raise (Error "invalid range");
     let rec iter n =
@@ -130,6 +134,11 @@ let list_ind_optf f itm lst =
         | h :: t -> if f h itm then Some i else iter (i+1) t
     in
     iter 0 lst;;
+
+let list_ind itm lst =
+    match list_ind_optf (=) itm lst with
+    | None -> raise Not_found
+    | Some i -> i;;
 
 let rec list_last = function
     | [] -> raise (Error "list_last expects a non-empty list")
@@ -163,9 +172,14 @@ let rec take n = function
     | [] -> []
     | h :: t -> if n = 0 then [] else h :: take (n - 1) t;;
 
-let rec drop n = function
-    | [] -> if n = 0 then [] else raise Out_of_bounds
-    | h :: t -> if n = 0 then t else drop (n-1) t;;
+let drop n lst =
+    let rec iter m = function
+        | [] -> if m = 0 then [] else raise Out_of_bounds
+        | h :: t -> if m = 0 then t else iter (m-1) t
+    in
+    iter (n-1) lst;;
+
+let list_drop = drop;;
 
 let list_max = function
     | [] -> raise (Empty_list "list_max expects a non-empty list")
@@ -253,8 +267,7 @@ let list_picki indexes lst =
 let list_generate f init n =
     List.rev @@
     List.fold_left (fun acc _ -> 
-        match acc with 
-        | h :: t -> (f h) :: h :: t)
+        match acc with h :: t -> (f h) :: h :: t)
     [init]
     (range 0 n);;
 
