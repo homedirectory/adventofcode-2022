@@ -80,7 +80,9 @@ let print_matrix printer mtrx =
     Array.(iter (fun row -> iter (fun x -> printer x; printf "; ") row; printf "\n%!") mtrx);;
 
 let print_matrixi printer mtrx =
-    Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row; printf "\n%!") mtrx);;
+    Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row;
+        printf "\n%!")
+    mtrx);;
 
 let matrix_map f mtrx =
     Array.(map (map f) mtrx);;
@@ -89,13 +91,21 @@ let matrix_mapi f mtrx =
     Array.(mapi (fun y row -> mapi (fun x el -> f (x, y) el) row) mtrx);;
 
 let matrix_flatten mtrx =
-    Array.(fold_left append mtrx);;
+    Array.(fold_left append [||] mtrx);;
 
 let matrix_dims mtrx =
     Array.(length mtrx, length mtrx.(0));;
 
 let matrix_iteri f mtrx =
     Array.(iteri (fun y row -> iteri (fun x el -> f (x, y) el) row) mtrx);;
+
+let matrix_iter f =
+    matrix_iteri (fun _ el -> f el);; 
+
+let print_matrix prntr sep mtrx =
+    Array.(iter (fun row -> 
+        iter (fun x -> prntr x; print_string sep) row; print_newline()) 
+    mtrx);;
 
 (* ========== LIST OPERATIONS ========== *)
 let car = List.hd;;
@@ -197,8 +207,15 @@ let rec find_first pred = function
     | [] -> None
     | h :: t -> if pred h then Some h else find_first pred t;;
 
-let list_sort_desc lst = List.sort (fun x y -> (compare x y) * -1) lst;;
 let list_sort_asc lst = List.sort compare lst;;
+
+let list_sortf f =
+    List.sort (fun a b -> compare (f a) (f b));;
+
+let list_sortf_desc f =
+    List.sort (fun a b -> (-1) * (compare (f a) (f b)));;
+
+let list_sort_desc = list_sortf_desc Fun.id;;
 
 let list_every_nth n lst =
     List.filteri (fun i x -> i mod n = 0) lst;;
