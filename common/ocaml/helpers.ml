@@ -76,9 +76,6 @@ let arr_findi_opt pred arr =
 			if n = len then -1 else if pred arr.(n) then n else iter (n + 1)
 		in iter 0;;
 
-let print_matrix printer mtrx =
-    Array.(iter (fun row -> iter (fun x -> printer x; printf "; ") row; printf "\n%!") mtrx);;
-
 let print_matrixi printer mtrx =
     Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row;
         printf "\n%!")
@@ -89,6 +86,10 @@ let matrix_map f mtrx =
 
 let matrix_mapi f mtrx =
     Array.(mapi (fun y row -> mapi (fun x el -> f (x, y) el) row) mtrx);;
+
+let matrix_setrow f n mtrx =
+    if n >= (Array.length mtrx) then raise Out_of_bounds
+    else Array.iteri (fun i v -> mtrx.(n).(i) <- f v) mtrx.(n);;
 
 let matrix_flatten mtrx =
     Array.(fold_left append [||] mtrx);;
@@ -116,14 +117,19 @@ let list_to_pair = function
     | a1 :: a2 :: [] -> (a1, a2)
     | _ -> failwith "list_to_pair: expected a list of length 2";;
 
+let list_make n x =
+    List.init n (fun _ -> x);;
+
 let range left right =
-    if left >= right then raise (Error "invalid range");
     let rec iter n =
         if n = right
         then []
         else n :: (iter (n+1))
     in
     iter left;;
+
+let range_incl left right =
+    (range left right) @ [right];;
 
 let list_empty = function
     | [] -> true
@@ -273,12 +279,39 @@ let rec list_windowed n = function
            else (match (split_after (dec n) lst) with
                  | wind, rest -> wind :: (list_windowed n rest));;
 
+let list_windowmap f n lst =
+    let len = (List.length lst) in
+    assert (n <= len);
+    let rec iter i = function
+        | [] -> []
+        | _ :: t as tail ->
+            if n > i then []
+            else let mapped = f (take n tail) in
+            mapped :: (iter (i-1) t)
+    in
+    iter len lst;;
+
 let list_pick indexes lst =
     let arr = Array.of_list lst in
     List.map (fun i -> arr.(i)) indexes;;
 
 let list_picki indexes lst =
     List.combine (list_pick indexes lst) indexes;;
+
+(* 
+   Allign lists to be of the same length.
+   f is applied to a list and its length difference from the longest one to produce a list of
+   missing elements
+ *)
+let lists_allign_len f lists =
+    let lists_and_lens = List.map (fun lst -> (lst, List.length lst)) lists in
+    let max_len = List.fold_left (fun acc (_,len) -> Int.max acc len) 0 lists_and_lens in
+    let extend_lst (lst,len) =
+        let d = max_len - len in
+        if d = 0 then lst else lst @ (f lst d)
+    in
+    List.map extend_lst lists_and_lens;;
+
 
 (* generates a list of length n, where each value is derived from the previous one *)
 let list_generate f init n =
