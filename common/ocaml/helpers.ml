@@ -29,6 +29,16 @@ let around x min max = x >= min && x <= max;;
 
 let int_of_bool b = if b then 1 else 0;;
 
+let for_find f a b =
+    let rec iter i =
+        if i = b then None
+        else
+            match f i with
+            | None -> iter (i+1)
+            | some -> some
+    in
+    iter a;;
+
 (* ========== CHAR OPERATIONS ========== *)
 let isupper c = around (Char.code c) 65 90;;
 let is_ascii c = 
@@ -121,12 +131,11 @@ let list_make n x =
     List.init n (fun _ -> x);;
 
 let range left right =
-    let rec iter n =
-        if n = right
-        then []
-        else n :: (iter (n+1))
+    let rec iter n lst =
+        if n = right then lst
+        else iter (n+1) (n :: lst)
     in
-    iter left;;
+    List.rev (iter left []);;
 
 let range_incl left right =
     (range left right) @ [right];;
@@ -206,8 +215,12 @@ let list_min = function
     | h :: t -> List.fold_left min h t;;
 
 let list_sum = function
-    | [] -> raise (Empty_list "list_sum expects a non-empty list")
-    | h :: t -> List.fold_left (fun x y -> x + y) h t;;
+    | [] -> failwith "list_sum expects a non-empty list"
+    | lst -> List.fold_left (+) 0 lst;;
+
+let list_sumf f = function
+    | [] -> failwith "list_sum expects a non-empty list"
+    | lst -> List.fold_left (fun acc x -> acc + (f x)) 0 lst;;
 
 let rec find_first pred = function
     | [] -> None
@@ -365,6 +378,12 @@ let list_rmis is lst =
 let list_lcm = function
     | [] -> raise (Error "list_lcm expects non-empty list")
     | h :: t -> List.fold_left lcm h t;;
+
+let list_only_some =
+    List.filter_map Fun.id;;
+
+let list_uniq lst =
+    List.sort_uniq (fun _ _ -> 0) lst;;
 
 (* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =
