@@ -34,7 +34,7 @@ let path_of_positions arr =
 
 let rock_chr, air_chr, src_chr, sand_chr = '#', '.', '+', 'o'
 
-type 'a dynamic_grid = { mtrx: 'a array array; mutable left: int }
+type 'a dynamic_grid = { mtrx: 'a matrix; mutable left: int }
 
 let mk_grid mtrx =
     { mtrx = mtrx; left = 0 }
