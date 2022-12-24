@@ -124,6 +124,36 @@ let print_matrix prntr sep mtrx =
         iter (fun x -> prntr x; print_string sep) row; print_newline()) 
     mtrx)
 
+let matrix_get (x, y) mtrx =
+    mtrx.(y).(x)
+
+let matrix_put (x, y) a mtrx =
+    mtrx.(y).(x) <- a;
+    mtrx
+
+let matrix_append_row row mtrx =
+    Array.append mtrx [|row|]
+
+(* look through a range of rows for a row satisfying predicate,
+   the range is inclusive *)
+let matrix_range_find_row_idx_opt pred l r mtrx =
+    if l < 0 || r >= (Array.length mtrx)
+    then failwith "matrix_range_find_row_idx_opt: invalid range"
+    else
+        let rec iter i =
+            if i > r
+            then None
+            else if pred mtrx.(i) then Some i
+            else iter (i + 1)
+        in
+        iter l
+
+let matrix_find_row_idx_opt pred mtrx =
+    matrix_range_find_row_idx_opt pred 0 (Array.length mtrx - 1) mtrx
+
+let arr_drop n arr =
+    Array.sub arr n (Array.length arr - n)
+
 (* ========== LIST OPERATIONS ========== *)
 let car = List.hd
 let cadr lst = List.nth lst 1
@@ -211,9 +241,12 @@ let drop n lst =
 
 let list_drop = drop
 
-let list_max = function
+let list_max_map f = function
     | [] -> raise (Empty_list "list_max expects a non-empty list")
-    | h :: t -> List.fold_left max h t
+    | h :: t -> List.fold_left max (f h) (List.map f t)
+
+let list_max lst =
+    list_max_map Fun.id lst
 
 let list_min = function
     | [] -> raise (Empty_list "list_min expects a non-empty list")
@@ -415,6 +448,47 @@ let rec list_permutations = function
         list_map_rest (fun hd tl -> List.map (List.cons hd) (list_permutations tl)) lst
         |> List.flatten
 ;;
+
+(* returns true if any element of the list satisfies predicate *) 
+let list_memf pred lst =
+    match List.find_opt pred lst with
+    | None -> false
+    | Some _ -> true
+
+(* ========== SEQUENCE OPERATIONS ========== *)
+(* like Seq.fold_left but stops when None is returned by f or end of sequence is reached,
+   return a tuple of accumulator and the rest of the sequence *)
+let seq_foldl_take f init seq =
+    let rec iter acc sq =
+        match Seq.uncons sq with
+        | None -> (acc, Seq.empty)
+        | Some(hd, tl) ->
+            match f acc hd with
+            | None -> (acc, tl)
+            | Some acc_out -> iter acc_out tl
+    in
+    iter init seq
+    
+let seq_foldli_take f init seq =
+    let rec iter acc i sq =
+        match Seq.uncons sq with
+        | None -> (acc, Seq.empty)
+        | Some(hd, tl) ->
+            match f acc i hd with
+            | None -> (acc, tl)
+            | Some acc_out -> iter acc_out (i + 1) tl
+    in
+    iter init 0 seq
+
+(* ========== Function OPERATIONS ========== *)
+let fun_fold f n init =
+    let rec iter i acc =
+        if i = 0
+        then acc
+        else iter (i - 1) (f acc)
+    in
+    if n < 0 then failwith "fun_fold: n < 0"
+    else iter n init
 
 (* ========== FILE (IO) OPERATIONS ========== *)
 let read_lines chan =

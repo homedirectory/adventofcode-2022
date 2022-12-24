@@ -1,6 +1,6 @@
 (executables
   (names day1 day2 day3 day4 day5 day6 day7 day8p1 day8p2
          day9 day10 day11 day12p1 day12p2 day13 day14p1 day14p2 
-         day15p1 day15p2 day16p1)
+         day15p1 day15p2 day16p1 day17)
   (libraries aoc str unix)
   (flags (:standard -warn-error -A -w -26-32)))
