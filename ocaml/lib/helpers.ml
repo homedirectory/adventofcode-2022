@@ -88,9 +88,21 @@ let str_to_int s =
 (* find index of first element in array that matches pred *)
 let arr_findi_opt pred arr =
 	let len = Array.length arr in
-		let rec iter n = 
-			if n = len then -1 else if pred arr.(n) then n else iter (n + 1)
-		in iter 0
+    let rec iter n = 
+        if n = len then -1 else if pred arr.(n) then n else iter (n + 1)
+    in 
+    iter 0
+
+let print_array printer arr =
+    let print x =
+        printer x;
+        printf ";";
+        ()
+    in
+    printf "[| ";
+    Array.iter print arr;
+    printf " |]\n%!";
+    ()
 
 let print_matrixi printer mtrx =
     Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row;
@@ -159,8 +171,13 @@ let car = List.hd
 let cadr lst = List.nth lst 1
 let cdr = List.tl
 
+let rec list_last_opt = function
+    | [] -> None
+    | hd :: [] -> Some hd
+    | _ :: tl -> list_last_opt tl
+
 let list_to_pair = function
-    | a1 :: a2 :: [] -> (a1, a2)
+    | [a1;a2] -> (a1, a2)
     | _ -> failwith "list_to_pair: expected a list of length 2"
 
 let list_make n x =
@@ -342,6 +359,48 @@ let list_windowmap f n lst =
     in
     iter len lst
 
+let list_take_opt n lst =
+    let rec iter i acc = function
+        | [] -> acc
+        | hd :: tl -> begin
+            if i = n then acc
+            else iter (i + 1) (hd :: acc) tl
+        end
+    in
+    match (List.compare_length_with lst n) with
+    | -1 -> None
+    | 0 -> Some lst
+    | _ -> Some (List.rev (iter 0 [] lst))
+
+let list_take n lst =
+    match list_take_opt n lst with
+    | None -> failwith "list_take: not enough elements"
+    | Some res -> res
+
+let list_sliding_window_opt n lst =
+    let rec iter acc = function
+        | [] -> acc
+        | hd :: tl -> begin
+            match (list_take_opt (n - 1) tl) with
+            | None -> acc
+            | Some wnd_tl -> iter ((hd :: wnd_tl) :: acc) tl
+        end
+    in
+    match (List.compare_length_with lst n) with
+    | -1 -> None
+    | 0 -> Some [lst]
+    | _ -> Some (List.rev (iter [] lst))
+
+let list_sliding_window n lst =
+    match list_sliding_window_opt n lst with
+    | None -> failwith "list_sliding_window: not enough elements"
+    | Some res -> res
+
+let list_pair_up = function
+    | [] -> []
+    | [_] -> []
+    | lst -> list_sliding_window 2 lst |> List.map list_to_pair
+
 let list_pick indexes lst =
     let arr = Array.of_list lst in
     List.map (fun i -> arr.(i)) indexes
@@ -424,6 +483,16 @@ let list_only_some lst =
 let list_uniq lst =
     List.sort_uniq (fun _ _ -> 0) lst
 
+let list_andmap f lst =
+    let rec iter = function
+        | [] -> true
+        | hd :: tl -> if f hd then iter tl else false
+    in
+    iter lst
+
+let list_mem_all els lst =
+    list_andmap (fun el -> List.mem el lst) els
+
 let maximize f = function
     | [] -> failwith "maximize expects non-empty list"
     | lst -> List.hd (List.sort (fun a1 a2 -> max (f a1) (f a2)) lst)
@@ -455,7 +524,11 @@ let list_memf pred lst =
     | None -> false
     | Some _ -> true
 
+let list_count x lst =
+    List.filter ((=) x) lst |> List.length
+
 (* ========== SEQUENCE OPERATIONS ========== *)
+
 (* like Seq.fold_left but stops when None is returned by f or end of sequence is reached,
    return a tuple of accumulator and the rest of the sequence *)
 let seq_foldl_take f init seq =
@@ -479,6 +552,20 @@ let seq_foldli_take f init seq =
             | Some acc_out -> iter acc_out (i + 1) tl
     in
     iter init 0 seq
+
+let seq_rev seq =
+    Seq.fold_left (fun acc x -> Seq.cons x acc) Seq.empty seq
+
+let seq_take_split n seq =
+    let rec iter acc i sq =
+        if i >= n then (acc, sq)
+        else
+            match Seq.uncons sq with
+            | None -> failwith "seq_drop_split: not enough elements"
+            | Some(hd, tl) -> iter (Seq.cons hd acc) (i + 1) tl
+    in
+    let (taken, rest) = (iter Seq.empty 0 seq) in 
+    (seq_rev taken, rest)
 
 (* ========== Function OPERATIONS ========== *)
 let fun_fold f n init =
