@@ -527,6 +527,9 @@ let list_memf pred lst =
 let list_count x lst =
     List.filter ((=) x) lst |> List.length
 
+let list_replace pred map lst =
+    List.map (fun x -> if pred x then map x else x) lst
+
 (* ========== SEQUENCE OPERATIONS ========== *)
 
 (* like Seq.fold_left but stops when None is returned by f or end of sequence is reached,
