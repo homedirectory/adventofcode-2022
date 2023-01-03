@@ -93,6 +93,20 @@ let arr_findi_opt pred arr =
     in 
     iter 0
 
+let arr_rev arr =
+    Array.to_list arr |> List.rev |> Array.of_list
+
+let arr_slice arr l r =
+    Array.sub arr l (r - l)
+
+let arr_prefix arr n =
+    try Array.sub arr 0 n with
+    | _ -> failwith (sprintf "arr_prefix arr %d" n)
+
+let arr_suffix arr n =
+    try Array.sub arr (Array.length arr - n) n with
+    | _ -> failwith (sprintf "arr_suffix arr %d" n)
+
 let print_array printer arr =
     let print x =
         printer x;
@@ -103,6 +117,9 @@ let print_array printer arr =
     Array.iter print arr;
     printf " |]\n%!";
     ()
+
+let matrix_dims mtrx =
+    Array.(length mtrx, length mtrx.(0))
 
 let print_matrixi printer mtrx =
     Array.(iteri (fun y row -> iteri (fun x el -> printer (x,y) el; printf "; ") row;
@@ -122,19 +139,21 @@ let matrix_setrow f n mtrx =
 let matrix_flatten mtrx =
     Array.(fold_left append [||] mtrx)
 
-let matrix_dims mtrx =
-    Array.(length mtrx, length mtrx.(0))
-
 let matrix_iteri f mtrx =
     Array.(iteri (fun y row -> iteri (fun x el -> f (x, y) el) row) mtrx)
 
 let matrix_iter f =
     matrix_iteri (fun _ el -> f el);; 
 
-let print_matrix prntr sep mtrx =
-    Array.(iter (fun row -> 
-        iter (fun x -> prntr x; print_string sep) row; print_newline()) 
-    mtrx)
+let print_matrix printer sep mtrx =
+    let print_row pr row =
+        Array.iter (fun x -> pr x; print_string sep) row;
+        print_newline()
+    in
+    let (h, w) = matrix_dims mtrx in
+    print_string "  ";
+    print_row print_int (Array.init w (fun i -> i mod 10));
+    Array.iteri (fun i row -> printf "%d " (i mod 10); print_row printer row) mtrx
 
 let matrix_get (x, y) mtrx =
     mtrx.(y).(x)
@@ -145,6 +164,13 @@ let matrix_put (x, y) a mtrx =
 
 let matrix_append_row row mtrx =
     Array.append mtrx [|row|]
+
+let matrix_transp mtrx =
+    let (h, w) = matrix_dims mtrx in
+    Array.init w (fun x -> Array.init h (fun y -> mtrx.(y).(x)))
+
+let matrix_rowmap f mtrx =
+    Array.map f mtrx
 
 (* look through a range of rows for a row satisfying predicate,
    the range is inclusive *)
@@ -265,9 +291,21 @@ let list_max_map f = function
 let list_max lst =
     list_max_map Fun.id lst
 
-let list_min = function
-    | [] -> raise (Empty_list "list_min expects a non-empty list")
-    | h :: t -> List.fold_left min h t
+let list_min_map f = function
+    | [] -> raise (Empty_list "list_max expects a non-empty list")
+    | h :: t -> List.fold_left min (f h) (List.map f t)
+
+let list_min lst =
+    list_min_map Fun.id lst
+
+let list_min_and_max lst =
+    let rec iter min_v max_v = function
+        | [] -> (min_v, max_v)
+        | hd :: tl -> iter (min min_v hd) (max max_v hd) tl
+    in
+    match lst with
+    | [] -> failwith "min_and_max: non-empty list expected"
+    | hd :: tl -> iter hd hd tl
 
 let list_sum = function
     | [] -> failwith "list_sum expects a non-empty list"
@@ -294,6 +332,17 @@ let list_sort_desc lst = list_sortf_desc Fun.id lst
 let list_every_nth n lst =
     List.filteri (fun i _ -> i mod n = 0) lst
 
+let split_afterp pred lst =
+    let rec iter left = function
+        | [] -> (left, [])
+        | hd :: tl -> begin
+            if pred hd then (hd :: left, tl)
+            else iter (hd :: left) tl
+        end
+    in
+    let (l, r) = iter [] lst in
+    (List.rev l, r)
+
 let split_after n lst =
     let rec iter i left right =
         if i > n then (left, right)
@@ -301,6 +350,17 @@ let split_after n lst =
         | [] -> raise Out_of_bounds
         | h :: t -> iter (i+1) (left @ [h]) t
     in iter 0 [] lst
+
+let split_beforep pred lst =
+    let rec iter left = function
+        | [] -> (left, [])
+        | hd :: tl as r -> begin
+            if pred hd then (left, r)
+            else iter (hd :: left) tl
+        end
+    in
+    let (l, r) = iter [] lst in
+    (List.rev l, r)
 
 let split_before n lst =
     split_after (n-1) lst
@@ -493,6 +553,9 @@ let list_andmap f lst =
 let list_mem_all els lst =
     list_andmap (fun el -> List.mem el lst) els
 
+let list_mem_none els lst =
+    list_andmap (fun el -> not (List.mem el lst)) els
+
 let maximize f = function
     | [] -> failwith "maximize expects non-empty list"
     | lst -> List.hd (List.sort (fun a1 a2 -> max (f a1) (f a2)) lst)
@@ -529,6 +592,24 @@ let list_count x lst =
 
 let list_replace pred map lst =
     List.map (fun x -> if pred x then map x else x) lst
+
+let tbl_to_assoc_list tbl =
+    Hashtbl.fold (fun k d acc -> (k, d) :: acc) tbl []
+
+let tbl_map tbl key f =
+    let data = f (Hashtbl.find_opt tbl key) in
+    Hashtbl.replace tbl key data;
+    ()
+
+let list_group_by f lst =
+    let cons_opt hd tl =
+        match tl with
+        | None -> [hd]
+        | Some lst -> hd :: lst
+    in
+    let tbl = Hashtbl.create ((List.length lst) / 2) in
+    List.iter (fun x -> tbl_map tbl (f x) (cons_opt x)) lst;
+    tbl_to_assoc_list tbl
 
 (* ========== SEQUENCE OPERATIONS ========== *)
 
