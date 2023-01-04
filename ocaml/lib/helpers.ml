@@ -93,6 +93,30 @@ let arr_findi_opt pred arr =
     in 
     iter 0
 
+let arr_findl_idx pred arr =
+	let len = Array.length arr in
+    let rec iter i = 
+        if i = len then failwith "arr_findl_idx: not found" 
+        else if pred arr.(i) then i
+        else iter (i + 1)
+    in 
+    iter 0
+
+let arr_findl_idx_opt pred arr =
+    try Some (arr_findl_idx pred arr) with _ -> None
+
+let arr_findr_idx pred arr =
+	let len = Array.length arr in
+    let rec iter i = 
+        if i = -1 then failwith "arr_findl_idx: not found" 
+        else if pred arr.(i) then i
+        else iter (i - 1)
+    in 
+    iter (len - 1)
+
+let arr_findr_idx_opt pred arr =
+    try Some (arr_findr_idx pred arr) with _ -> None
+
 let arr_rev arr =
     Array.to_list arr |> List.rev |> Array.of_list
 
@@ -126,6 +150,12 @@ let print_matrixi printer mtrx =
         printf "\n%!")
     mtrx)
 
+let matrix_map_copy f m =
+    Array.map (Array.map f) m
+
+let matrix_copy m =
+    Array.map Array.copy m
+
 let matrix_map f mtrx =
     Array.(map (map f) mtrx)
 
@@ -158,6 +188,20 @@ let print_matrix printer sep mtrx =
 let matrix_get (x, y) mtrx =
     mtrx.(y).(x)
 
+let matrix_get_opt (x, y) m =
+    let (h, w) = matrix_dims m in
+    if x < 0 || x >= w || y < 0 || y >= h
+    then None
+    else Some (matrix_get (x, y) m)
+
+let matrix_get_col_opt x m =
+    let (_, w) = matrix_dims m in
+    if x < 0 || x >= w then None
+    else Some (Array.map (fun row -> row.(x)) m)
+
+let matrix_get_col x m =
+    Option.get (matrix_get_col_opt x m)
+
 let matrix_put (x, y) a mtrx =
     mtrx.(y).(x) <- a;
     mtrx
@@ -188,6 +232,9 @@ let matrix_range_find_row_idx_opt pred l r mtrx =
 
 let matrix_find_row_idx_opt pred mtrx =
     matrix_range_find_row_idx_opt pred 0 (Array.length mtrx - 1) mtrx
+
+let matrix_of_2dlist lst =
+    List.map Array.of_list lst |> Array.of_list
 
 let arr_drop n arr =
     Array.sub arr n (Array.length arr - n)
@@ -541,7 +588,7 @@ let list_only_some lst =
     List.filter_map Fun.id lst
 
 let list_uniq lst =
-    List.sort_uniq (fun _ _ -> 0) lst
+    List.sort_uniq compare lst
 
 let list_andmap f lst =
     let rec iter = function
