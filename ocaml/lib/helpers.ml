@@ -640,6 +640,18 @@ let list_count x lst =
 let list_replace pred map lst =
     List.map (fun x -> if pred x then map x else x) lst
 
+let list_rmf_first pred lst =
+    let rec iter acc = function
+        | [] -> List.rev acc
+        | hd :: tl ->
+            if pred hd then (List.rev acc) @ tl
+            else iter (hd :: acc) tl
+    in
+    iter [] lst
+
+let list_rm_first v lst =
+    list_rmf_first ((=) v) lst
+
 let tbl_to_assoc_list tbl =
     Hashtbl.fold (fun k d acc -> (k, d) :: acc) tbl []
 
