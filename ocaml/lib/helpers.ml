@@ -618,7 +618,9 @@ let list_map_rest f lst =
             iter (left @ [hd]) tl ((f hd rest):: acc)
     in
     List.rev @@ iter [] lst []
-;;
+
+let list_flatmap f lst =
+    List.map f lst |> List.flatten
 
 let rec list_permutations = function
     | [] -> []
@@ -626,7 +628,6 @@ let rec list_permutations = function
     | lst ->
         list_map_rest (fun hd tl -> List.map (List.cons hd) (list_permutations tl)) lst
         |> List.flatten
-;;
 
 (* returns true if any element of the list satisfies predicate *) 
 let list_memf pred lst =

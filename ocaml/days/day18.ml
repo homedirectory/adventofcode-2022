@@ -1,8 +1,17 @@
 open Aoc.Helpers
 open Printf
 
-let print_cube (x, y, z) =
-    printf "(%d,%d,%d)\n" x y z
+type pos_t = int * int * int
+
+let pos_to_str (x, y, z) =
+    sprintf "(%d, %d, %d)" x y z
+
+let print_pos pos =
+    print_string (pos_to_str pos)
+
+let pos_x (x, _, _) = x
+let pos_y (_, y, _) = y
+let pos_z (_, _, z) = z
 
 (* a cube's side is represented as a pair of coordinates of its diagonal *)
 let sides_of_cube (x, y, z) =
@@ -49,130 +58,67 @@ let part1 input =
     let cubes = parse_cubes input in
     surf_area cubes
 
-type t = Cube | Trap | Free | Air
+type side_t = Top | Bot | Right | Left | Front | Back
 
-let cube_neighbs (x, y, z) =
+let list_adjacent (x, y, z) =
     [
-        (x-1, y, z); (x+1, y, z);
-        (x, y-1, z); (x, y+1, z);
-        (x, y, z-1); (x, y, z+1);
+        ((x - 1, y, z), Right); ((x + 1, y, z), Left);
+        ((x, y - 1, z), Back); ((x, y + 1, z), Front);
+        ((x, y, z - 1), Top); ((x, y, z + 1), Bot);
     ]
-
-let pos3_to_str (x, y, z) =
-    sprintf "(%d, %d, %d)" x y z
-
-let normalize_cubes cubes =
-    let x0 = list_min_map (fun (x, _, _) -> x) cubes in
-    let y0 = list_min_map (fun (_, y, _) -> y) cubes in
-    let z0 = list_min_map (fun (_, _, z) -> z) cubes in
-    List.map (fun (x, y, z) -> (x - x0, y - y0, z - z0)) cubes
-
-let mk_3d_arr v d1 d2 d3 =
-    Array.init d1 (fun _ -> (Array.init d2 (fun _ -> (Array.make d3 v))))
-
-let arr_3d_get arr (x, y, z) =
-    arr.(x).(y).(z)
-
-let arr_3d_get_opt arr pos =
-    try Some (arr_3d_get arr pos) with _ -> None
-
-let arr_3d_set arr v (x, y, z) =
-    arr.(x).(y).(z) <- v
-
-let arr_3d_set_all arr v pos_lst =
-    List.iter (fun p -> arr_3d_set arr v p) pos_lst
-
-let arr_3d_iteri f arr =
-    Array.iteri (fun d1 arr2 -> 
-        Array.iteri (fun d2 arr1 -> 
-            Array.iteri (fun d3 v -> f (d1, d2, d3) v) arr1) arr2) arr
-
-let arr_3d_foldl f init arr =
-    Array.fold_left (fun acc arr2 -> 
-        Array.fold_left (fun acc1 arr1 -> 
-            Array.fold_left f acc1 arr1) acc arr2) init arr
-
-let arr_3d_to_flatlist arr =
-    List.rev (arr_3d_foldl (fun acc v -> v :: acc) [] arr)
-
-let arr_3d_dims arr =
-    let d1 = Array.length arr in
-    let d2 = 
-        if d1 = 0 then 0
-        else Array.length arr.(0)
-    in
-    let d3 =
-        if d2 = 0 then 0
-        else Array.length arr.(0).(0)
-    in
-    (d1, d2, d3)
-
-let arr_3d_is_edge arr (x, y, z) =
-    let (d1, d2, d3) = arr_3d_dims arr in
-    x = 0 || x = d1 - 1 ||
-    y = 0 || y = d2 - 1 ||
-    z = 0 || z = d3 - 1
 
 let list_without excluded lst =
     List.filter (fun x -> not (List.mem x excluded)) lst
 
-let adj_air arr pos =
-    List.filter (fun p -> 
-        match arr_3d_get_opt arr p with 
-        | None -> false 
-        | Some sm -> sm = Air
-    ) (cube_neighbs pos)
+let list_append_dedup lst1 lst2 =
+    List.append lst1 lst2 |> list_uniq
 
-let scan arr =
-    let is_free pos =
-        (arr_3d_get_opt arr pos) = Some Free
-    in
-    let is_out pos =
-        (arr_3d_get_opt arr pos) = None
-    in
-    let is_cube_at pos =
-        (arr_3d_get_opt arr pos) = Some Cube
-    in
-    let rec step acc =
-        match List.map (cube_neighbs) acc |> List.flatten |> list_uniq |> filter_not is_cube_at |> list_without acc with
-        | [] -> (false, acc)
-        | adj -> 
-            let next_acc = adj @ acc in
-            match List.find_opt (fun p -> is_free p || is_out p) adj with
-            | None -> step next_acc
-            | Some _ -> (true, (filter_not is_out next_acc))
-    in
-    let n = ref 0 in
-    arr_3d_iteri (fun pos v -> 
-        match v with
-        | Cube | Free | Trap -> ()
-        | Air ->
-            if arr_3d_is_edge arr pos
-            then arr_3d_set arr Free pos
-            else
-                match step [pos] with
-                | (false, path) -> arr_3d_set_all arr Trap path;
-                    n := !n + (surf_area path)
-                | (true, path) -> arr_3d_set_all arr Free path
-    ) arr;
-    !n
+let list_min_and_max_map minf maxf = function
+    | [] -> failwith "list_min_and_max: empty list"
+    | hd :: tl ->
+        List.fold_left (fun (minv, maxv) a -> (min minv (minf a), max maxv (maxf a)))
+        (minf hd, maxf hd) tl
 
-let count_trapped_sides cubes =
-    let norm_cubes = normalize_cubes cubes in
-    let x = list_max_map (fun (x, _, _) -> x) norm_cubes in
-    let y = list_max_map (fun (_, y, _) -> y) norm_cubes in
-    let z = list_max_map (fun (_, _, z) -> z) norm_cubes in
-    let arr = mk_3d_arr Air (x+1) (y+1) (z+1) in
-    List.iter (arr_3d_set arr Cube) norm_cubes;
-    scan arr
+let tbl_of_keys f keys =
+    List.map (fun k -> (k, f k)) keys |> List.to_seq |> Hashtbl.of_seq
 
-(* part 2: count using part 1 solution, then substract those air cubes that are trapped *)
+(* TODO replace list by set *)
+let trace_exterior init pred nextf =
+    let rec iter seen next acc =
+        match list_flatmap nextf next |> list_uniq |> list_without seen with
+        | [] -> acc
+        | lst ->
+            let (partt, partf) = List.partition pred lst in
+            iter (list_append_dedup next seen) partt (list_append_dedup partf acc)
+    in
+    iter [init] [init] []
+
 let part2 input =
-    let p1 = part1 input in
     let cubes = parse_cubes input in
-    let n = count_trapped_sides cubes in
-    printf "Found %d trapped sides\n" n;
-    p1 - n
+    let xmin, xmax = list_min_and_max_map pos_x pos_x cubes in
+    let ymin, ymax = list_min_and_max_map pos_y pos_y cubes in
+    let zmin, zmax = list_min_and_max_map pos_z pos_z cubes in
+
+    let is_in_bounds (x, y, z) =
+        x >= (xmin - 1) && x <= (xmax + 1) &&
+        y >= (ymin - 1) && y <= (ymax + 1) &&
+        z >= (zmin - 1) && z <= (zmax + 1)
+    in
+
+    let nextf pos =
+        list_adjacent pos |> List.filter (fun (pos, _) -> is_in_bounds pos)
+    in
+
+    let cube_tbl = tbl_of_keys (fun _ -> ()) cubes in
+    let is_air pos =
+        not (Hashtbl.mem cube_tbl pos)
+    in
+
+    let start = ((xmin - 1, ymin - 1, zmin - 1), Top) in
+    let ext = trace_exterior start (fun (pos, _) -> is_air pos) (fun (pos, _) -> nextf pos) 
+        |> List.map fst in
+    print_list print_pos ext;
+    List.length ext
 
 let filename = input_for_day 18
 let test_filename = test_input_for_day 18
