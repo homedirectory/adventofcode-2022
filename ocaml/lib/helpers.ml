@@ -15,9 +15,13 @@ let add a b = a + b
 let mul a b = a * b
 let sub a b = a - b
 let div a b = a / b
-let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e))
 let inc x = x + 1
 let dec x = x - 1
+
+let pow a e = Int.of_float ((Int.to_float a) ** (Int.to_float e))
+
+let logf b a =
+    (Float.log2 a) /. (Float.log2 b)
 
 let lcm a b =
     let lrg, sml = if a > b then a, b else b, a in
