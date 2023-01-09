@@ -1,75 +1,51 @@
 open Aoc.Helpers
 open Printf
 
-let log5 a =
-    Float.to_int (logf 5. (Float.of_int a))
-
-let div_rem a b =
-    let q = a / b in
-    let r = a - (q * b) in
-    (q, r)
-
 module SNAFU = struct
-    let char_to_int = function
+    let char_to_dec = function
         | '=' -> -2
         | '-' -> -1
         | '0' -> 0
         | '1' -> 1
         | '2' -> 2
-        | c -> failwith (sprintf "char_to_int: wtf %C" c)
-
-    let int_to_char = function
-        | -2 -> '='
-        | -1 -> '-'
-        | 0 -> '0'
-        | 1 -> '1'
-        | 2 -> '2'
-        | d -> failwith (sprintf "int_to_char: wtf %d" d)
+        | c -> failwith (sprintf "char_to_dec: wtf %C" c)
 
     let to_int str =
         let n = ((String.length str) - 1) in
         str_explode str
-        |> List.mapi (fun i c -> (pow 5 (n - i)) * (char_to_int c))
+        |> List.mapi (fun i c -> (pow 5 (n - i)) * (char_to_dec c))
         |> List.fold_left (+) 0
 
-    let length_of_int d =
-        (log5 (d * 2)) + 1
+    let dec_to_char = function
+        | 0 -> '0'
+        | 1 -> '1'
+        | 2 -> '2'
+        | 3 -> '='
+        | 4 -> '-'
+        | d -> failwith (sprintf "dec_to_char: wtf %d" d)
 
-    let rev_char = function
-        | '=' -> '2'
-        | '-' -> '1'
-        | '0' -> '0'
-        | '1' -> '-'
-        | '2' -> '='
-        | c -> failwith (sprintf "char_rev: wtf %C" c)
+    let to_base5 d =
+        let rec iter n acc =
+            if n = 0 then acc
+            else iter (n / 5) ((n mod 5) :: acc)
+        in
+        iter d []
 
+    let balance lst =
+        let rec iter carry acc = function
+            | [] -> if carry > 0 then carry :: acc else acc
+            | hd :: tl ->
+                let d = hd + carry in
+                if d = 5 then iter 1 (0 :: acc) tl
+                else if d >= 3 then iter 1 (d :: acc) tl
+                else iter 0 (d :: acc) tl
+        in
+        iter 0 [] (List.rev lst)
+
+    (* first, convert to base 5, then make it balanced *)
     let of_int d =
-        let rec max_val e =
-            if e = 0 then 2
-            else (2 * (pow 5 e)) + (max_val (e - 1))
-        in
-        let map_neg neg c =
-            if neg then rev_char c else c
-        in
-        let mid a b =
-            a + ((b - a) / 2) + 1
-        in
-        let rec iter n acc x neg =
-            printf "iter n=%d acc='%s' x=%d neg=%B\n%!" n (str_of_chars (List.rev acc)) x neg;
-            if n < 0 then begin assert (x <= 0); List.rev acc end 
-            else
-                if x = 0 then (List.rev acc) @ (list_make (n + 1) '0')
-                else if n > 0 && x <= (max_val (n - 1)) then iter (n - 1) ('0' :: acc) x neg
-                else
-                    let e = pow 5 n in
-                    let qf = (Float.of_int x) /. (Float.of_int e) in
-                    let r = x - ((Float.to_int qf) * e) in
-                    if qf <= 1.0 then iter (n - 1) ((map_neg neg '1') :: acc) (e - x) (not neg)
-                    else if qf <= 1.5 then iter (n - 1) ((map_neg neg '1') :: acc) r neg
-                    else if qf < 2. then iter (n - 1) ((map_neg neg '2') :: acc) ((e * 2) - x) (not neg)
-                    else iter (n - 1) ((map_neg neg '2') :: acc) (x - (e * 2)) neg
-        in
-        str_of_chars (iter ((length_of_int d) - 1) [] d (d < 0))
+        str_of_chars (List.map dec_to_char (balance (to_base5 d)))
+
 end
 
 let part1 input =
@@ -86,4 +62,4 @@ let _ = assert (test_s1 = "2=-1=0")
 let input = file_to_text (input_for_day 25)
 let s1 = part1 input
 let _ = printf "Part 1: %s\n" s1
-(*let _ = assert (s1 = "2=-1=0")*)
+let _ = assert (s1 = "2-0-0=1-0=2====20=-2")
